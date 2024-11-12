@@ -438,5 +438,32 @@ internal class StripView(Strip strip, BayRenderController bayRC) : IRenderedStri
         };
 
         canvas.DrawRect(Origin.X, Origin.Y, BayRenderController.StripWidth + (2 * _padding), BayRenderController.StripHeight, paint);
+
+        DrawGrabHandle(Origin.X, Origin.Y, BayRenderController.StripWidth, BayRenderController.StripHeight, _padding, canvas);
+    }
+
+    private static void DrawGrabHandle(float originX, float originY, int stripWidth, int stripHeight, int padding, SKCanvas canvas)
+    {
+        const float grabHandleWidth = 15;
+
+        // Set the position to the right-hand end of the strip
+        var xPosition = originX + stripWidth + (2 * padding);
+        var yPosition = originY + padding; // Start from the base
+
+        // Adjust the height to account for the padding
+        float adjustedHeight = stripHeight - (2 * padding);
+
+        // Define the rectangle for the grab handle
+        var grabHandleRect = new SKRect(xPosition, yPosition, xPosition + grabHandleWidth, yPosition + adjustedHeight);
+
+        // Define the paint for the grab handle
+        using (var paint = new SKPaint())
+        {
+            paint.Color = SKColors.Gray; // TODO: Decide on this. Example color
+            paint.Style = SKPaintStyle.Fill;
+
+            // Draw the grab handle
+            canvas.DrawRect(grabHandleRect, paint);
+        }
     }
 }

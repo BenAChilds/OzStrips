@@ -15,6 +15,9 @@ namespace MaxRumsey.OzStripsPlugin;
 
 internal class BayRenderController(Bay bay) : IDisposable
 {
+    private bool _isDragging;
+    private SKPoint _initialDragPosition;
+
     public const int StripHeight = 64;
     public const int BarHeight = 30;
     public const int StripWidth = 420;
@@ -50,6 +53,7 @@ internal class BayRenderController(Bay bay) : IDisposable
         SkControl.Click += Click;
         SkControl.DoubleClick += Click;
         SkControl.MouseMove += Hover;
+        SkControl.MouseUp += MouseUp;
         SkControl.Name = "StripBoard";
         SkControl.BackColor = Color.Wheat;
         SkControl.Dock = DockStyle.Top;
@@ -169,7 +173,17 @@ internal class BayRenderController(Bay bay) : IDisposable
         if (strip is not null)
         {
             args = new MouseEventArgs(args.Button, args.Clicks, (int)(args.X / Scale), (int)(args.Y / Scale), args.Delta);
-            strip.RenderedStripItem?.HandleClick(args);
+
+            // Check if the click is on the grab handle
+            if (IsOnGrabHandle(args.X, args.Y, strip.RenderedStripItem))
+            {
+                _isDragging = true;
+                _initialDragPosition = new SKPoint(args.X, args.Y);
+            }
+            else
+            {
+                strip.RenderedStripItem?.HandleClick(args);
+            }
         }
         else
         {
@@ -189,9 +203,31 @@ internal class BayRenderController(Bay bay) : IDisposable
 
         point = new Point((int)(point.Value.X / Scale), (int)(point.Value.Y / Scale));
 
-        var strip = DetermineStripAtPos(point.Value.Y);
+        if (_isDragging)
+        {
+            // Update the position of the strip being dragged
+            UpdateDragPosition(point.Value);
+        }
+        else
+        {
+            var strip = DetermineStripAtPos(point.Value.Y);
+            strip?.RenderedStripItem?.HandleHover(point.Value);
+        }
+    }
 
-        strip?.RenderedStripItem?.HandleHover(point.Value);
+    private void MouseUp(object sender, MouseEventArgs e)
+    {
+        if (_isDragging)
+        {
+            _isDragging = false;
+
+            // Determine the new bay based on the mouse position
+            var newBay = DetermineBayAtPos(e.Location);
+            if (newBay != null)
+            {
+                Bay.BayManager.DropStrip(newBay);
+            }
+        }
     }
 
     private StripListItem? DetermineStripAtPos(int y)
@@ -215,5 +251,23 @@ internal class BayRenderController(Bay bay) : IDisposable
         }
 
         return null;
+    }
+
+    private static bool IsOnGrabHandle(int x, int y, IRenderedStripItem stripItem)
+    {
+        // Implement logic to check if the click is on the grab handle
+        // based on the position and dimensions of the grab handle
+        return true; // Placeholder
+    }
+
+    private static void UpdateDragPosition(Point point)
+    {
+        // Implement logic to update the position of the strip being dragged
+    }
+
+    private static Bay? DetermineBayAtPos(Point location)
+    {
+        // Implement logic to determine the new bay based on the mouse position
+        return null; // Placeholder
     }
 }
